@@ -18,6 +18,7 @@
 	- ability to view items individual has purchased 
 ### TODO
 
+  - Remove whitespaces from end of filepath 
   - Clean data 
   - Automatically resize file 
   - Validate file extension  

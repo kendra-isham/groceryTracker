@@ -11,8 +11,14 @@ namespace GroceryTracker
         public string Base64String { get; set; }
 
         public byte[] Array { get; set; }
-        public Image(string path)
+        
+        public Image() { }
+        
+        //gets image path
+        public void SetImage()
         {
+            Console.Write("Please enter image path: ");
+            string path = Console.ReadLine();
             Path = path;
         }
 

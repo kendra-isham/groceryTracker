@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,40 +13,40 @@ namespace GroceryTracker
         {
 
             Console.WriteLine("Welcome to the check calculator.");
-            Console.Write("Please enter image path: ");
-            string path = Console.ReadLine();
-
-            Image image = new Image(path);
-            bool isValidSize = image.SizeCheck(path);
+            Image image = new Image();
+            image.SetImage();
+            
+            bool isValidSize = image.SizeCheck(image.Path);
 
             if (isValidSize)
             {
-                image.Base64String = image.ConvertImage(path);
+                image.Base64String = image.ConvertImage(image.Path);
                 Console.Write("Image Converted to base64!");
             }
             else
             {
                 Console.WriteLine("Please resize your image to less than 1MB");
             }
-            //image.Base64String = image.ConvertImage(path); 
 
-            MainAsync(image.Base64String).Wait();
+            MainAsync(image).Wait();
 
         }
 
-        static async Task MainAsync(string path)
+        static async Task MainAsync(Image image)
         {
             try
             {
                 HttpClient client = new HttpClient();
 
-                MultipartFormDataContent form = new MultipartFormDataContent();
-                form.Add(new StringContent("d0a73c8a2d88957"), "apikey");
-                form.Add(new StringContent("2"), "ocrengine");
-                form.Add(new StringContent("true"), "detectorientation");
-                form.Add(new StringContent("true"), "scale");
-                form.Add(new StringContent("true"), "istable");
-                form.Add(new StringContent(path), "base64Image");
+                MultipartFormDataContent form = new MultipartFormDataContent
+                {
+                    { new StringContent("d0a73c8a2d88957"), "apikey" },
+                    { new StringContent("2"), "ocrengine" },
+                    { new StringContent("true"), "detectorientation" },
+                    { new StringContent("true"), "scale" },
+                    { new StringContent("true"), "istable" },
+                    { new StringContent(image.Base64String), "base64Image" }
+                };
 
                 HttpResponseMessage response = await client.PostAsync("https://api.ocr.space/parse/image", form);
 
@@ -53,11 +54,11 @@ namespace GroceryTracker
 
                 //Product object needs reworked 
                 Product result = JsonConvert.DeserializeObject<Product>(strContent);
-                File.WriteAllText("C:\\Users\\khuts\\OneDrive\\Desktop\\apiResults.txt", "completed");
+
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                Console.WriteLine(e);
+                File.WriteAllText("C:\\Users\\khuts\\OneDrive\\Desktop\\apiResults.txt", e.ToString());
             }
         }
     }
