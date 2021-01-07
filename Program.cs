@@ -14,6 +14,7 @@ namespace GroceryTracker
 
             Console.WriteLine("Welcome to the check calculator.");
             Image image = new Image();
+             
             image.SetImage();
             
             bool isValidSize = image.SizeCheck(image.Path);
@@ -28,6 +29,7 @@ namespace GroceryTracker
                 Console.WriteLine("Please resize your image to less than 1MB");
             }
 
+            //api call 
             MainAsync(image).Wait();
 
         }
@@ -49,11 +51,25 @@ namespace GroceryTracker
                 };
 
                 HttpResponseMessage response = await client.PostAsync("https://api.ocr.space/parse/image", form);
-
+                
                 string strContent = await response.Content.ReadAsStringAsync();
-
+                Console.WriteLine("\nafter api call");
                 //Product object needs reworked 
-                Product result = JsonConvert.DeserializeObject<Product>(strContent);
+                //this is not working
+                ApiInfo ocrResult = JsonConvert.DeserializeObject<ApiInfo>(strContent);
+                Console.WriteLine("\ninfo after deserialization");
+
+                if (ocrResult.OCRExitCode == 1)
+                {
+                    for (int i = 0; i < ocrResult.ParsedResults.Length; i++)
+                    {
+                        Console.WriteLine(ocrResult.ParsedResults[i].ParsedText);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("ERROR: " + strContent);
+                }
 
             }
             catch (Exception e)
