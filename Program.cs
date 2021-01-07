@@ -1,27 +1,27 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+
 
 namespace GroceryTracker
 {
     class Program
     {
-        static void Main()
+        static async Task Main()
         {
 
             Console.WriteLine("Welcome to the check calculator.");
             Image image = new Image();
              
             image.SetImage();
-            
+
             bool isValidSize = image.SizeCheck(image.Path);
 
             if (isValidSize)
             {
-                image.Base64String = image.ConvertImage(image.Path);
+                ImageToBase64(image);
                 Console.Write("Image Converted to base64!");
             }
             else
@@ -30,8 +30,16 @@ namespace GroceryTracker
             }
 
             //api call 
-            MainAsync(image).Wait();
+            await MainAsync(image);
+            Console.WriteLine("\nafter api call");
+            Console.ReadLine();
+        }
 
+        public static void ImageToBase64(Image image)
+        {
+            //this string needs to be dependent on file extension, hard coding is not the best option here 
+            image.Base64String = "data:image/jpeg;base64,"+Convert.ToBase64String(File.ReadAllBytes(image.Path));
+            File.WriteAllText("C:\\Users\\khuts\\Desktop\\apiResults.txt", image.Base64String);
         }
 
         static async Task MainAsync(Image image)
@@ -46,16 +54,14 @@ namespace GroceryTracker
                     { new StringContent("2"), "ocrengine" },
                     { new StringContent("true"), "detectorientation" },
                     { new StringContent("true"), "scale" },
-                    { new StringContent("true"), "istable" },
+                    { new StringContent("false"), "istable" },
                     { new StringContent(image.Base64String), "base64Image" }
                 };
-
+                Console.WriteLine("About to api");
                 HttpResponseMessage response = await client.PostAsync("https://api.ocr.space/parse/image", form);
-                
+
                 string strContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("\nafter api call");
-                //Product object needs reworked 
-                //this is not working
+
                 ApiInfo ocrResult = JsonConvert.DeserializeObject<ApiInfo>(strContent);
                 Console.WriteLine("\ninfo after deserialization");
 
@@ -68,13 +74,13 @@ namespace GroceryTracker
                 }
                 else
                 {
-                    Console.WriteLine("ERROR: " + strContent);
+                    Console.WriteLine("ERROR: " + ocrResult.ErrorMessage);
                 }
 
             }
             catch (Exception e)
             {
-                File.WriteAllText("C:\\Users\\khuts\\OneDrive\\Desktop\\apiResults.txt", e.ToString());
+                Console.WriteLine(e.ToString());
             }
         }
     }

@@ -9,8 +9,6 @@ namespace GroceryTracker
     {
         public string Path { get; set; }
         public string Base64String { get; set; }
-
-        public byte[] Array { get; set; }
         
         public Image() { }
         
@@ -35,14 +33,7 @@ namespace GroceryTracker
             return sizeValid;
         }
 
-        //Converts image to base64
-        public string ConvertImage(string path)
-        {
-            byte[] imageArray = File.ReadAllBytes(path);
-            string base64ImageRepresentation = "data:image/jpeg;base64," + Convert.ToBase64String(imageArray);
-
-            return base64ImageRepresentation;
-        }
-
+        //checks file extension is valid for OCR API requirments 
+       
     }
 }

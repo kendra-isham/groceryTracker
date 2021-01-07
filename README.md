@@ -9,20 +9,18 @@
 	- visualize data (if time, visualize trends in purchased items)
 
 ### Premise
-	- read from file 
-	- resize file when necessary 
-	- api call to get items and prices from receipt 
-		- clean data to get item name and price  
-	- loop through assigning each item\price to user
-	- database connection to log who buys what 
-	- ability to view items individual has purchased 
-### TODO
+	- User designates file path to grocery receipt image
+	- Loop through assigning each item\price to user
+	- Log each user's purchased items to database 
+	- Ability to view each user's purchase history
 
-  - Remove whitespaces from end of filepath 
-  - Clean data 
-  - Automatically resize file 
+### TODO
+  - Clean API response data 
+	- include store name, item names, prices 
+  - Programatically resize file if too large 
   - Validate file extension  
+  - Utilize windows file explorer 
   - Create users 
   - Assign items 
-  - Connect to SQL db 
-  - Read from SQL db 
+  - SQL connection
+  
