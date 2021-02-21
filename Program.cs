@@ -1,87 +1,81 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.IO;
-using System.Net.Http;
+﻿using System;
+using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
+using Microsoft.Azure.CognitiveServices.Vision.ComputerVision.Models;
 using System.Threading.Tasks;
+using System.IO;
+using System.Threading;
 
-
-namespace GroceryTracker
+namespace receiptReader
 {
-    class Program
+    static class Program
     {
-        static async Task Main()
+        static string subscriptionKey = Environment.GetEnvironmentVariable("COMPUTER_VISION_SUBSCRIPTION_KEY");
+        static string endpoint = Environment.GetEnvironmentVariable("COMPUTER_VISION_ENDPOINT");
+
+        public static void Main()
         {
-
-            Console.WriteLine("Welcome to the check calculator.");
-            Image image = new Image();
-             
-            image.SetImage();
-
-            bool isValidSize = image.SizeCheck(image.Path);
-
-            if (isValidSize)
-            {
-                ImageToBase64(image);
-                Console.Write("Image Converted to base64!");
-            }
-            else
-            {
-                Console.WriteLine("Please resize your image to less than 1MB");
-            }
-
-            //api call 
-            await MainAsync(image);
-            Console.WriteLine("\nafter api call");
-            Console.ReadLine();
+            // Create a client
+            ComputerVisionClient client = Authenticate(endpoint, subscriptionKey);
+            string READ_TEXT_LOCAL_IMAGE = GetImagePath();
+            // Extract text (OCR) from a local image using the Read API
+            ReadFileLocal(client, READ_TEXT_LOCAL_IMAGE).Wait();
         }
 
-        public static void ImageToBase64(Image image)
+        private static string GetImagePath()
         {
-            //this string needs to be dependent on file extension, hard coding is not the best option here 
-            image.Base64String = "data:image/jpeg;base64,"+Convert.ToBase64String(File.ReadAllBytes(image.Path));
-            File.WriteAllText("C:\\Users\\khuts\\Desktop\\apiResults.txt", image.Base64String);
+            Console.Write("Please enter image path: ");
+            string path = Console.ReadLine();
+
+            return path;
         }
 
-        static async Task MainAsync(Image image)
+        //Authenticates the API Client
+        public static ComputerVisionClient Authenticate(string endpoint, string key)
         {
-            try
+            ComputerVisionClient client =
+              new ComputerVisionClient(new ApiKeyServiceClientCredentials(key))
+              { Endpoint = endpoint };
+            return client;
+        }
+
+
+        public static async Task ReadFileLocal(ComputerVisionClient client, string localFile)
+        {
+            Console.WriteLine("READ FILE FROM LOCAL");
+
+            // Read text from URL
+            var textHeaders = await client.ReadInStreamAsync(File.OpenRead(localFile), language: "en");
+            // After the request, get the operation location (operation ID)
+            string operationLocation = textHeaders.OperationLocation;
+            Thread.Sleep(2000);
+
+            // Retrieve the URI where the recognized text will be stored from the Operation-Location header.
+            const int numberOfCharsInOperationId = 36;
+            string operationId = operationLocation.Substring(operationLocation.Length - numberOfCharsInOperationId);
+
+            // Extract the text
+            ReadOperationResult results;
+            Console.WriteLine($"Reading text from local file {Path.GetFileName(localFile)}...");
+            Console.WriteLine();
+            do
             {
-                HttpClient client = new HttpClient();
-
-                MultipartFormDataContent form = new MultipartFormDataContent
-                {
-                    { new StringContent("d0a73c8a2d88957"), "apikey" },
-                    { new StringContent("2"), "ocrengine" },
-                    { new StringContent("true"), "detectorientation" },
-                    { new StringContent("true"), "scale" },
-                    { new StringContent("false"), "istable" },
-                    { new StringContent(image.Base64String), "base64Image" }
-                };
-                Console.WriteLine("About to api");
-                HttpResponseMessage response = await client.PostAsync("https://api.ocr.space/parse/image", form);
-
-                string strContent = await response.Content.ReadAsStringAsync();
-
-                ApiInfo ocrResult = JsonConvert.DeserializeObject<ApiInfo>(strContent);
-                Console.WriteLine("\ninfo after deserialization");
-
-                if (ocrResult.OCRExitCode == 1)
-                {
-                    for (int i = 0; i < ocrResult.ParsedResults.Length; i++)
-                    {
-                        Console.WriteLine(ocrResult.ParsedResults[i].ParsedText);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("ERROR: " + ocrResult.ErrorMessage);
-                }
-
+                results = await client.GetReadResultAsync(Guid.Parse(operationId));
             }
-            catch (Exception e)
+            while ((results.Status == OperationStatusCodes.Running ||
+                results.Status == OperationStatusCodes.NotStarted));
+
+            // Display the found text.
+            Console.WriteLine();
+            var textUrlFileResults = results.AnalyzeResult.ReadResults;
+            foreach (ReadResult page in textUrlFileResults)
             {
-                Console.WriteLine(e.ToString());
+                foreach (Line line in page.Lines)
+                {
+                    Console.WriteLine(line.Text);
+                }
             }
+            Thread.Sleep(20000);
+            Console.WriteLine();
         }
     }
 }
