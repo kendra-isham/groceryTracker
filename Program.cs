@@ -1,87 +1,98 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-
+﻿using System;
+using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
+using System.Text.RegularExpressions;
 
 namespace GroceryTracker
 {
-    class Program
+    static class Driver
     {
-        static async Task Main()
+        static string subscriptionKey = Environment.GetEnvironmentVariable("COMPUTER_VISION_SUBSCRIPTION_KEY");
+        static string endpoint = Environment.GetEnvironmentVariable("COMPUTER_VISION_ENDPOINT");
+        
+        public static void Main()
         {
+            // Create a client
+            ComputerVisionClient client = OCRCall.Authenticate(endpoint, subscriptionKey);
+            
+            // Get image path 
+            string imagePath = OCRCall.GetImagePath();
 
-            Console.WriteLine("Welcome to the check calculator.");
-            Image image = new Image();
-             
-            image.SetImage();
+            // Extract text (OCR) from a local image using the Read API and call CleanData
+            OCRCall.ReadFileLocal(client, imagePath).Wait();
 
-            bool isValidSize = image.SizeCheck(image.Path);
-
-            if (isValidSize)
-            {
-                ImageToBase64(image);
-                Console.Write("Image Converted to base64!");
-            }
-            else
-            {
-                Console.WriteLine("Please resize your image to less than 1MB");
-            }
-
-            //api call 
-            await MainAsync(image);
-            Console.WriteLine("\nafter api call");
-            Console.ReadLine();
         }
 
-        public static void ImageToBase64(Image image)
+        //all the regex
+        public static void CleanData(string preCleanedText)
         {
-            //this string needs to be dependent on file extension, hard coding is not the best option here 
-            image.Base64String = "data:image/jpeg;base64,"+Convert.ToBase64String(File.ReadAllBytes(image.Path));
-            File.WriteAllText("C:\\Users\\khuts\\Desktop\\apiResults.txt", image.Base64String);
-        }
+            // removes everything at and above member ID and AID in footer
+            string pattern = @"\d{12}"; //gets 12 digits
+            var rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            var splitResult = rx.Split(preCleanedText);
+            string removeCostcoHeader = splitResult[1];
 
-        static async Task MainAsync(Image image)
-        {
-            try
+            // removes everything at and below the word "total"
+            pattern = @"\b(TOTAL)\b";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            splitResult = rx.Split(removeCostcoHeader);
+            string removeBelowTotal = splitResult[0];
+
+            // removes everything at and below the word "subtotal"
+            pattern = @"\b(SUBTOTAL)\b"; 
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            splitResult = rx.Split(removeBelowTotal);
+            string removeBelowSubtotal = splitResult[0];
+
+            // removes anything measured per pound -> ex 3 @ 4.49
+            pattern = @"\d\s@\s\d[.]\d{2}";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            splitResult = rx.Split(removeBelowSubtotal);
+            string removePerPound = "";
+            foreach(string strings in splitResult)
             {
-                HttpClient client = new HttpClient();
-
-                MultipartFormDataContent form = new MultipartFormDataContent
-                {
-                    { new StringContent("d0a73c8a2d88957"), "apikey" },
-                    { new StringContent("2"), "ocrengine" },
-                    { new StringContent("true"), "detectorientation" },
-                    { new StringContent("true"), "scale" },
-                    { new StringContent("false"), "istable" },
-                    { new StringContent(image.Base64String), "base64Image" }
-                };
-                Console.WriteLine("About to api");
-                HttpResponseMessage response = await client.PostAsync("https://api.ocr.space/parse/image", form);
-
-                string strContent = await response.Content.ReadAsStringAsync();
-
-                ApiInfo ocrResult = JsonConvert.DeserializeObject<ApiInfo>(strContent);
-                Console.WriteLine("\ninfo after deserialization");
-
-                if (ocrResult.OCRExitCode == 1)
-                {
-                    for (int i = 0; i < ocrResult.ParsedResults.Length; i++)
-                    {
-                        Console.WriteLine(ocrResult.ParsedResults[i].ParsedText);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("ERROR: " + ocrResult.ErrorMessage);
-                }
-
+                removePerPound += strings;
             }
-            catch (Exception e)
+
+            // removes astricks, _A_, and _E_ 
+            pattern = @"[/*]|\s[A]\s|\s[E]\s";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            splitResult = rx.Split(removePerPound);
+            string removeAstricksAE = "";
+            foreach (string strings in splitResult)
             {
-                Console.WriteLine(e.ToString());
+                removeAstricksAE += strings;
             }
+
+            // removes multiple m's 
+            pattern = @"\s[M]";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            splitResult = rx.Split(removeAstricksAE);
+            string removeM = "";
+            foreach (string strings in splitResult)
+            {
+                removeM += strings;
+            }
+
+            // get all products
+            pattern = @"[\d]+[.]+[\d][\d]";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            splitResult = rx.Split(removeM);
+            string getProducts = "";
+            foreach (string strings in splitResult)
+            {
+                getProducts += strings + "\n";
+            }
+           
+            // removes any 1 char alone on a line after separating into products 
+            pattern = @"\s\w\s";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            splitResult = rx.Split(getProducts);
+            string removeExtraCharOnLine = "";
+            foreach (string strings in splitResult)
+            {
+                removeExtraCharOnLine += strings + "\n";
+            }
+            Console.WriteLine(removeExtraCharOnLine);
         }
     }
 }
