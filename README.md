@@ -27,7 +27,6 @@
 ### TODO
   - Clean API response data 
 	- isolate item number, item name, item price 
-  - Refactor CleanData() call to be from main 
   - Create users 
   - Assign items 
   - SQL connection

@@ -24,7 +24,7 @@ namespace GroceryTracker
             return client;
         }
 
-        public static async Task ReadFileLocal(ComputerVisionClient client, string localFile, Data data)
+        public static async Task ReadFileLocal(ComputerVisionClient client, string localFile, TextData data)
         {
             // Read text from URL
             var textHeaders = await client.ReadInStreamAsync(File.OpenRead(localFile), language: "en");
@@ -46,21 +46,17 @@ namespace GroceryTracker
             while ((results.Status == OperationStatusCodes.Running ||
                 results.Status == OperationStatusCodes.NotStarted));
 
-            // Stringify precleaned text data 
+            // Set data obj with precleaned text data 
             Console.WriteLine();
-            string preCleanedText = "";
             var textUrlFileResults = results.AnalyzeResult.ReadResults;
             foreach (ReadResult page in textUrlFileResults)
             {
                 foreach (Line line in page.Lines)
                 {
-                    preCleanedText += line.Text + "\n";
+                    data.PreCleanedText += line.Text + "\n";
                 }
             }
-
-            // Set Data object 
-            data.PreCleanedText = preCleanedText; 
-
+            //Console.WriteLine(data.PreCleanedText);
         }
     }
 }
