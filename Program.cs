@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace GroceryTracker
 {
@@ -11,6 +12,8 @@ namespace GroceryTracker
         
         public static void Main()
         {
+            Data data = new Data();
+
             // Create a client
             ComputerVisionClient client = OCRCall.Authenticate(endpoint, subscriptionKey);
             
@@ -18,8 +21,10 @@ namespace GroceryTracker
             string imagePath = OCRCall.GetImagePath();
 
             // Extract text (OCR) from a local image using the Read API and call CleanData
-            OCRCall.ReadFileLocal(client, imagePath).Wait();
+            OCRCall.ReadFileLocal(client, imagePath, data).Wait();
 
+            // Clean Text 
+            CleanData(data.PreCleanedText);
         }
 
         //all the regex
@@ -93,6 +98,7 @@ namespace GroceryTracker
                 removeExtraCharOnLine += strings + "\n";
             }
             Console.WriteLine(removeExtraCharOnLine);
+            Thread.Sleep(200000);
         }
     }
 }
