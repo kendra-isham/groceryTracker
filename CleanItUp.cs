@@ -11,16 +11,17 @@ namespace GroceryTracker
         {
             try
             {
+                string date = GetDate(data.PreCleanedText);
                 string firstProcessedString = GeneralCleaning(data.PreCleanedText);
-                string prices = IsolatePrices(firstProcessedString);
-
+                List<string> prices = IsolatePrices(firstProcessedString);
                 string[] products = ProductList(firstProcessedString);
                 List<string> productNums = IsolateProductNum(products);
                 List<string> productNames = IsolateProductName(products);
 
+                data.PurchaseDate = date;
                 data.ProductNames = productNames;
                 data.ProductNumbers = productNums;
-                // TODO: split prices into List and populate data
+                data.ProductPrices = prices;
             }
             catch
             {
@@ -112,7 +113,7 @@ namespace GroceryTracker
 
         }
         // isolate the prices 
-        public static string IsolatePrices(string generalCleaning)
+        public static List<string> IsolatePrices(string generalCleaning)
         {
             //find all x.xx- and turn it to -x.xx
             string negPattern = @"\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})[-]";
@@ -141,7 +142,30 @@ namespace GroceryTracker
                 getPrices += match + "\n";
             }
 
-            return getPrices;
+            string[] tempPrices = getPrices.Split('\n');
+            List<string> finalPrices = tempPrices.ToList();
+
+            return finalPrices;
+        }
+
+        // get date, if no date present, set date as today 
+        public static string GetDate(string testing)
+        {
+            string pattern = @"\d{2,}/\d{2,}/\d{2}"; 
+            var rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            Match matchedDate = rx.Match(testing);
+            string date; 
+            if (matchedDate.Success)
+            {
+                date = matchedDate.Value;
+            }
+            else
+            {
+                date = DateTime.Now.ToString("dd/mm/yyyy");
+            }
+
+            return date;
+
         }
 
         // general text cleaning 
@@ -211,7 +235,6 @@ namespace GroceryTracker
             }
                 return removeExtraCharOnLine;
         }
-
 
         // replace every x.xx- with -x.xx
         public string EvaluatorRegex(Match m)

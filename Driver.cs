@@ -24,6 +24,12 @@ namespace GroceryTracker
 
             // Initial Receipt Cleaning 
             CleanItUp.DataCleaning(data);
+
+            Console.WriteLine(data.PurchaseDate);
+            data.ProductPrices.ForEach(Console.WriteLine);
+            data.ProductNumbers.ForEach(Console.WriteLine);
+            data.ProductNames.ForEach(Console.WriteLine);
+
             Thread.Sleep(300000);
         }
     }
