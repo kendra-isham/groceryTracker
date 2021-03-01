@@ -56,7 +56,6 @@ namespace GroceryTracker
                     data.PreCleanedText += line.Text + "\n";
                 }
             }
-            //Console.WriteLine(data.PreCleanedText);
         }
     }
 }

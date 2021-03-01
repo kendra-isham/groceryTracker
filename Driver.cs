@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 
 namespace GroceryTracker
@@ -22,7 +23,8 @@ namespace GroceryTracker
             OCRCall.ReadFileLocal(client, imagePath, data).Wait();
 
             // Initial Receipt Cleaning 
-            CleanItUp.InitialCleaning(data.PreCleanedText);
+            CleanItUp.DataCleaning(data);
+            Thread.Sleep(300000);
         }
     }
 }

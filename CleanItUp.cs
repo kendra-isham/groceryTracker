@@ -1,17 +1,156 @@
 ﻿using System;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GroceryTracker
 {
     class CleanItUp
     {
-        public static void InitialCleaning(string preCleanedText)
+        public static void DataCleaning(TextData data)
         {
-            //removes everything at and above member ID and AID in footer
+            try
+            {
+                string firstProcessedString = GeneralCleaning(data.PreCleanedText);
+                string prices = IsolatePrices(firstProcessedString);
+
+                string[] products = ProductList(firstProcessedString);
+                List<string> productNums = IsolateProductNum(products);
+                List<string> productNames = IsolateProductName(products);
+
+                data.ProductNames = productNames;
+                data.ProductNumbers = productNums;
+                // TODO: split prices into List and populate data
+            }
+            catch
+            {
+                Console.WriteLine("Error when cleaning data. Please try again.");
+                Driver.Main();
+            }
+        }
+
+        // isolate product name 
+        public static List<string> IsolateProductName(string[] products)
+        {
+
+            // split on at least 3 nums 
+            string pattern = @"\d{3,}";
+            List<string> productName = new List<string>();
+            Regex rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            foreach (string product in products)
+            {
+                var ogProductName = rx.Split(product);
+                productName.Add(ogProductName[1]);
+            }
+            return productName;
+        }
+
+        // isolate product number 
+        public static List<string> IsolateProductNum(string[] products)
+        {
+            //split on at least 3 nums 
+            string pattern = @"\d{3,}";
+            List<string> productNums = new List<string>();
+            Match ogProductNum;
+            foreach (string product in products) 
+            {
+                ogProductNum = Regex.Match(product, pattern, RegexOptions.IgnoreCase);
+                productNums.Add(ogProductNum.ToString());
+            }
+          
+            return productNums;
+        }
+
+        // gets product num + name 
+        public static string[] ProductList(string firstProcessedString)
+        {
+            // get all products
+            string pattern = @"[-]\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})|\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})";
+            Regex rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            var splitResult = rx.Split(firstProcessedString);
+
+            // replace return item num and name with "00000 RETURN" 
+            pattern = @"[A-Z]\d{11}\s\w{3,}";
+            string toReplace = "00000 RETURN";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            for(int i = 0; i < splitResult.Length; i++)
+            {
+                splitResult[i] = rx.Replace(splitResult[i], toReplace);
+            }
+
+            // if extra \n, replace with "" 
+            // if -, replace with ""
+            // if only 1 character, replace with ""
+            pattern = @"/^\s+|\s+$/g";
+            string removeDashPattern = @"[-]";
+            string removeOneChar = @"\b\w\b";
+            toReplace = "";
+            rx = new Regex(pattern);
+            Regex rx2 = new Regex(removeDashPattern);
+            Regex rx3 = new Regex(removeOneChar);
+            
+            for (int i = 0; i < splitResult.Length; i++)
+            {
+                splitResult[i] = rx.Replace(splitResult[i], toReplace);
+                splitResult[i] = rx2.Replace(splitResult[i], toReplace);
+                splitResult[i] = rx3.Replace(splitResult[i], toReplace);
+            }
+
+            // if no product num, assign "99999"
+            pattern = @"\n[a-z]";
+            toReplace = "99999 ";
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            for (int i = 0; i < splitResult.Length; i++)
+            {
+                splitResult[i] = rx.Replace(splitResult[i], toReplace);
+            }
+
+            // remove any empty values from splitResult 
+            splitResult = splitResult.Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
+
+            return splitResult;
+
+        }
+        // isolate the prices 
+        public static string IsolatePrices(string generalCleaning)
+        {
+            //find all x.xx- and turn it to -x.xx
+            string negPattern = @"\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})[-]";
+            Regex rx = new Regex(negPattern, RegexOptions.IgnoreCase);
+            MatchCollection returns = rx.Matches(generalCleaning);
+            string getReturns = "";
+            foreach (Match match in returns)
+            {
+                getReturns += match + "\n";
+            }
+            CleanItUp p = new CleanItUp();
+
+            MatchEvaluator evalatue = new MatchEvaluator(p.EvaluatorRegex);
+            Regex r = new Regex(negPattern);
+
+            // do actual conversion 
+            string newString = r.Replace(generalCleaning, evalatue);
+
+            // get all prices 
+            string pattern = @"[-]\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})|\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})"; // targets x.xx- OR x.xx
+            rx = new Regex(pattern, RegexOptions.IgnoreCase);
+            MatchCollection prices = rx.Matches(newString);
+            string getPrices = "";
+            foreach (Match match in prices)
+            {
+                getPrices += match + "\n";
+            }
+
+            return getPrices;
+        }
+
+        // general text cleaning 
+        public static string GeneralCleaning(string testing)
+        {
+            // removes everything at and above member ID and AID in footer
             string pattern = @"\d{12}"; //gets 12 digits
             var rx = new Regex(pattern, RegexOptions.IgnoreCase);
-            var splitResult = rx.Split(preCleanedText);
+            var splitResult = rx.Split(testing);
             string removeCostcoHeader = splitResult[1];
 
             // removes everything at and below the word "total"
@@ -70,53 +209,18 @@ namespace GroceryTracker
             {
                 removeExtraCharOnLine += strings + "\n";
             }
-
-            //TODO: remove x.xx- from removeExtraCharOnLine aka list of prices 
-                //could find x.xx- in the list, convert to double and *1 then remove the end - if easier 
-            //find all x.xx- and turn it to -x.xx
-            pattern = @"\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})[-]"; // targets x.xx-
-            rx = new Regex(pattern, RegexOptions.IgnoreCase);
-            MatchCollection returns = rx.Matches(removeExtraCharOnLine);
-            string getReturns = "";
-            foreach (Match match in returns)
-            {
-                getReturns += match + "\n";
-            }
-
-            pattern = @"\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})"; // targets x.xx
-            rx = new Regex(pattern, RegexOptions.IgnoreCase);
-            MatchCollection numbers = rx.Matches(getReturns);
-            string negativeNums = "";
-            foreach (Match strings in numbers)
-            {
-                negativeNums += "-" + strings.ToString() + "\n";
-            }
-            Console.WriteLine(negativeNums);
-
-            // get all prices 
-            pattern = @"\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})";
-            rx = new Regex(pattern, RegexOptions.IgnoreCase);
-            MatchCollection prices = rx.Matches(removeExtraCharOnLine);
-            string getPrices = "";
-            foreach (Match match in prices)
-            {
-                getPrices += match + "\n";
-            }
-            Console.WriteLine(getPrices);
-
-            //TODO: remove any stray - from lines 
-
-            // get all products
-            pattern = @"\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})";
-            rx = new Regex(pattern, RegexOptions.IgnoreCase);
-            splitResult = rx.Split(removeExtraCharOnLine);
-            string getProducts = "";
-            foreach (string strings in splitResult)
-            {
-                getProducts += strings + "\n";
-            }
-            Console.WriteLine(getProducts);
-            Thread.Sleep(200000);
+                return removeExtraCharOnLine;
         }
+
+
+        // replace every x.xx- with -x.xx
+        public string EvaluatorRegex(Match m)
+        {
+            string pattern = @"[-]";
+            string[] number = Regex.Split(m.ToString(), pattern);
+            string num = "-" + number[0];
+            return num;
+        }
+
     }
 }
