@@ -25,11 +25,8 @@
 				- Keys will be provided in additional information when turning in the project 
 
 ### TODO
-  - Clean API response data 
-	- isolate item number, item name, item price 
-  - Create users 
-  - Assign items 
   - SQL connection
+  - Assign items
   - GUI 
 	- Utilize windows file explorer 
   - Regex to clean Kroger and Meijer receipts 
