@@ -26,6 +26,9 @@
 
 ### TODO
   - SQL connection
+	- Connect to azure SQL 
+	- Potentially refactor code to better suit SQL 
+	- https://docs.microsoft.com/en-us/azure/azure-sql/database/connect-query-dotnet-visual-studio
   - Assign items
   - GUI 
 	- Utilize windows file explorer 

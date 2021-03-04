@@ -7,11 +7,19 @@ namespace GroceryTracker
 {
     static class Driver
     {
+        // TODO: move to config file
+        // TODO: swap to connectionString for sql stuff
         static string subscriptionKey = Environment.GetEnvironmentVariable("COMPUTER_VISION_SUBSCRIPTION_KEY");
         static string endpoint = Environment.GetEnvironmentVariable("COMPUTER_VISION_ENDPOINT");
-        
+        static string dataSource = Environment.GetEnvironmentVariable("DATASOURCE");
+        static string SQLUsername = Environment.GetEnvironmentVariable("AZURE_SQL_USERNAME");
+        static string SQLPassword = Environment.GetEnvironmentVariable("AZURE_SQL_PASSWORD");
+        static string groceryDB = "grocery";
+
+
         public static void Main()
         {
+            DBConnection.SQLTestConnection(dataSource, SQLUsername, SQLPassword, groceryDB);
             TextData data = new TextData();
             List<User> users = new List<User>();
 
