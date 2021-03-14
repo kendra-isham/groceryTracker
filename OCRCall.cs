@@ -10,10 +10,12 @@ namespace GroceryTracker
     {
         public static string GetImagePath()
         {
+            string path = ""; 
+           
             Console.Write("Please enter Costco receipt image path: ");
-            string path = Console.ReadLine();
+            path = Console.ReadLine();
 
-            return path;
+            return path; 
         }
 
         public static ComputerVisionClient Authenticate(string endpoint, string key)
@@ -27,34 +29,42 @@ namespace GroceryTracker
         public static async Task ReadFileLocal(ComputerVisionClient client, string localFile, TextData data)
         {
             // Read text from URL
-            var textHeaders = await client.ReadInStreamAsync(File.OpenRead(localFile), language: "en");
-            // After the request, get the operation location (operation ID)
-            string operationLocation = textHeaders.OperationLocation;
+            try
+            {
+                var textHeaders = await client.ReadInStreamAsync(File.OpenRead(localFile), language: "en");
+
+                // After the request, get the operation location (operation ID)
+                string operationLocation = textHeaders.OperationLocation;
             
-            // Retrieve the URI where the recognized text will be stored from the Operation-Location header.
-            const int numberOfCharsInOperationId = 36;
-            string operationId = operationLocation.Substring(operationLocation.Length - numberOfCharsInOperationId);
+                // Retrieve the URI where the recognized text will be stored from the Operation-Location header.
+                const int numberOfCharsInOperationId = 36;
+                string operationId = operationLocation.Substring(operationLocation.Length - numberOfCharsInOperationId);
 
-            // Extract the text
-            ReadOperationResult results;
-            Console.WriteLine($"Reading text from local file {Path.GetFileName(localFile)}...");
-            Console.WriteLine();
-            do
-            {
-                results = await client.GetReadResultAsync(Guid.Parse(operationId));
-            }
-            while ((results.Status == OperationStatusCodes.Running ||
-                results.Status == OperationStatusCodes.NotStarted));
-
-            // Set data obj with precleaned text data 
-            Console.WriteLine();
-            var textUrlFileResults = results.AnalyzeResult.ReadResults;
-            foreach (ReadResult page in textUrlFileResults)
-            {
-                foreach (Line line in page.Lines)
+                // Extract the text
+                ReadOperationResult results;
+                Console.WriteLine($"Reading text from local file {Path.GetFileName(localFile)}...");
+                Console.WriteLine();
+                do
                 {
-                    data.PreCleanedText += line.Text + "\n";
+                    results = await client.GetReadResultAsync(Guid.Parse(operationId));
                 }
+                while ((results.Status == OperationStatusCodes.Running ||
+                    results.Status == OperationStatusCodes.NotStarted));
+
+                // Set data obj with precleaned text data 
+                Console.WriteLine();
+                var textUrlFileResults = results.AnalyzeResult.ReadResults;
+                foreach (ReadResult page in textUrlFileResults)
+                {
+                    foreach (Line line in page.Lines)
+                    {
+                        data.PreCleanedText += line.Text + "\n";
+                    }
+                }
+            }catch (FileNotFoundException)
+            {
+                Console.WriteLine("Cannot find file.");
+                GetImagePath();
             }
         }
     }

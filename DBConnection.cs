@@ -12,13 +12,18 @@ namespace GroceryTracker
 {
     class DBConnection
     {
-        public static void SQLTestConnection(string dataSource, string sqlUsername, string sqlPassword, string groceryDB) {
+
+        static string dataSource = Environment.GetEnvironmentVariable("DATASOURCE");
+        static string SQLUsername = Environment.GetEnvironmentVariable("AZURE_SQL_USERNAME");
+        static string SQLPassword = Environment.GetEnvironmentVariable("AZURE_SQL_PASSWORD");
+        static string groceryDB = "grocery";
+        public static void SQLTestConnection() {
             try
             {
                 SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
                     builder.DataSource = dataSource;
-                    builder.UserID = sqlUsername;
-                    builder.Password = sqlPassword;
+                    builder.UserID = SQLUsername;
+                    builder.Password = SQLPassword;
                     builder.InitialCatalog = groceryDB;
                 using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
                 {

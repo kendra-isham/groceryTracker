@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 
@@ -7,19 +8,11 @@ namespace GroceryTracker
 {
     static class Driver
     {
-        // TODO: move to config file
-        // TODO: swap to connectionString for sql stuff
         static string subscriptionKey = Environment.GetEnvironmentVariable("COMPUTER_VISION_SUBSCRIPTION_KEY");
         static string endpoint = Environment.GetEnvironmentVariable("COMPUTER_VISION_ENDPOINT");
-        static string dataSource = Environment.GetEnvironmentVariable("DATASOURCE");
-        static string SQLUsername = Environment.GetEnvironmentVariable("AZURE_SQL_USERNAME");
-        static string SQLPassword = Environment.GetEnvironmentVariable("AZURE_SQL_PASSWORD");
-        static string groceryDB = "grocery";
-
 
         public static void Main()
         {
-            DBConnection.SQLTestConnection(dataSource, SQLUsername, SQLPassword, groceryDB);
             TextData data = new TextData();
             List<User> users = new List<User>();
 
@@ -35,13 +28,12 @@ namespace GroceryTracker
             
             Thread.Sleep(10);
         }
-
         private static void APICall(TextData data)
         {
             // Create a client
             ComputerVisionClient client = OCRCall.Authenticate(endpoint, subscriptionKey);
 
-            // Get image path 
+            // Get image path
             string imagePath = OCRCall.GetImagePath();
 
             // Extract text (OCR) from a local image using the Read API and call CleanData
@@ -59,38 +51,45 @@ namespace GroceryTracker
                 if (moreUserCheck == "y")
                 {
                     Main();
-                } else if (moreUserCheck == "n")
+                }
+                else if (moreUserCheck == "n")
                 {
                     APICall(data);
-                } else
+                }
+                else
                 {
                     Console.WriteLine("Invalid Input. Please reply Y or N");
-                    Console.Write("Do you need to change users? Y/N ");
-                    moreUserCheck = Console.ReadLine().ToLower();
+                    PromptForMoreRecipts(data);
                 }
-            } else if (moreReceiptCheck == "n")
+            }
+            else if (moreReceiptCheck == "n")
             {
                 Console.WriteLine("Goodbye!");
-            } else
+            }
+            else
             {
                 Console.WriteLine("Invalid Input. Please reply Y or N");
                 PromptForMoreRecipts(data);
             }
-
-            // TODO: If more receipts, check fora different users 
         }
         private static void PromptUserForInfo(List<User> users)
         {
-            Console.Write("Enter how many people are splitting the cost: ");
-            int numOfUsers = Convert.ToInt32(Console.ReadLine());
-
-            for(int i = 0; i < numOfUsers; i++) { 
-                User user = new User();
-                Console.Write("Enter user's name: ");
-                user.Name = Console.ReadLine(); 
-                users.Add(user);
+            try
+            {
+                Console.Write("Enter how many people are splitting the cost: ");
+                int numOfUsers = Convert.ToInt32(Console.ReadLine());
+                for (int i = 0; i < numOfUsers; i++)
+                {
+                    User user = new User();
+                    Console.Write("Enter name: ");
+                    user.Name = Console.ReadLine();
+                    users.Add(user);
+                }
+            }catch (Exception)
+            {
+                Console.WriteLine("Error. Please try again");
+                PromptUserForInfo(users);
             }
-
         }
     }
 }
