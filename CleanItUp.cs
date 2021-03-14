@@ -7,7 +7,7 @@ namespace GroceryTracker
 {
     class CleanItUp
     {
-        public static void DataCleaning(TextData data)
+        public static List<Product> DataCleaning(Product data)
         {
             try
             {
@@ -18,18 +18,35 @@ namespace GroceryTracker
                 List<string> productNums = IsolateProductNum(products);
                 List<string> productNames = IsolateProductName(products);
 
-                data.PurchaseDate = date;
-                data.ProductNames = productNames;
-                data.ProductNumbers = productNums;
-                data.ProductPrices = prices;
+                List<Product> receipt = PopulateList(prices, productNums, productNames, date);
+                return receipt;
             }
             catch
             {
                 Console.WriteLine("Error when cleaning data. Please try again.");
                 Driver.Main();
+                return null;
             }
         }
 
+        // populate list of Products 
+        public static List<Product> PopulateList(List<string> prices, List<string> productNums, List<string> productNames, string purchaseDate)
+        {
+            List<Product> receipt = new List<Product>();
+
+            // there has to be a more effecient way of doing this
+            for (int i = 0; i < prices.Count-1; i++)
+            {
+                Product product = new Product();
+                product.ProductName = productNames.ToArray()[i];
+                product.ProductNumber = productNums.ToArray()[i];
+                product.ProductPrice = Convert.ToDouble(prices.ToArray()[i]);
+                product.PurchaseDate = purchaseDate;
+                receipt.Add(product);
+            }
+
+            return receipt; 
+        }
         // isolate product name 
         public static List<string> IsolateProductName(string[] products)
         {
@@ -157,11 +174,11 @@ namespace GroceryTracker
             string date; 
             if (matchedDate.Success)
             {
-                date = matchedDate.Value;
+                date = DateTime.Parse(matchedDate.Value).ToString("yyyy/mm/dd");
             }
             else
             {
-                date = DateTime.Now.ToString("dd/mm/yyyy");
+                date = DateTime.Now.ToString("yyyy/mm/dd");
             }
 
             return date;

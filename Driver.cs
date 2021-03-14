@@ -13,7 +13,7 @@ namespace GroceryTracker
 
         public static void Main()
         {
-            TextData data = new TextData();
+            Product data = new Product();
             List<User> users = new List<User>();
 
             PromptUserForInfo(users);
@@ -21,14 +21,21 @@ namespace GroceryTracker
             APICall(data);
 
             // Initial Receipt data cleaning
-            CleanItUp.DataCleaning(data);
+            List<Product> receipt = CleanItUp.DataCleaning(data);
 
-            // After first receipt, check for additional actions
+            foreach (Product p in receipt)
+            {
+                Console.WriteLine(p.PurchaseDate + " " + p.ProductNumber + " " + p.ProductPrice + " " + p.ProductName);
+            }
+
+            // TODO: Assign products to users 
+
+            // After receipt, check for additional actions
             PromptForMoreRecipts(data);
             
             Thread.Sleep(10);
         }
-        private static void APICall(TextData data)
+        private static void APICall(Product data)
         {
             // Create a client
             ComputerVisionClient client = OCRCall.Authenticate(endpoint, subscriptionKey);
@@ -39,19 +46,19 @@ namespace GroceryTracker
             // Extract text (OCR) from a local image using the Read API and call CleanData
             OCRCall.ReadFileLocal(client, imagePath, data).Wait();
         }
-        private static void PromptForMoreRecipts(TextData data)
+        private static void PromptForMoreRecipts(Product data)
         {
             Console.Write("Do you have another receipt? Y/N ");
             string moreReceiptCheck = Console.ReadLine().ToLower();
 
             if (moreReceiptCheck == "y")
             {
-                Console.Write("Do you need to change users? Y/N ");
+                /*Console.Write("Do you need to change users? Y/N ");
                 string moreUserCheck = Console.ReadLine().ToLower();
                 if (moreUserCheck == "y")
-                {
+                {*/
                     Main();
-                }
+                /*}
                 else if (moreUserCheck == "n")
                 {
                     APICall(data);
@@ -60,7 +67,7 @@ namespace GroceryTracker
                 {
                     Console.WriteLine("Invalid Input. Please reply Y or N");
                     PromptForMoreRecipts(data);
-                }
+                }*/
             }
             else if (moreReceiptCheck == "n")
             {

@@ -94,9 +94,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssignItems.cs" />
     <Compile Include="CleanItUp.cs" />
     <Compile Include="DBConnection.cs" />
-    <Compile Include="TextData.cs" />
+    <Compile Include="Product.cs" />
     <Compile Include="OCRCall.cs" />
     <Compile Include="Driver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -26,7 +26,7 @@ namespace GroceryTracker
             return client;
         }
 
-        public static async Task ReadFileLocal(ComputerVisionClient client, string localFile, TextData data)
+        public static async Task ReadFileLocal(ComputerVisionClient client, string localFile, Product data)
         {
             // Read text from URL
             try

@@ -21,8 +21,8 @@
 		- Advanced Tab 
 			- Environment Variables 
 			- System Variables 
-			- Set up COMPUTER_VISION_ENDPOINT and COMPUTER_VISION_SUBSCRIPTION_KEY
-				- Keys will be provided in additional information when turning in the project 
+			- Set up COMPUTER_VISION_ENDPOINT, COMPUTER_VISION_SUBSCRIPTION_KEY, DATASOURCE, SQLUsername, SQLPassword
+				- Information will be provided in "additional information" when turning in the project 
 
 ### TODO
   - SQL connection
