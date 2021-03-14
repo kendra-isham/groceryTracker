@@ -23,12 +23,11 @@ namespace GroceryTracker
             // Initial Receipt data cleaning
             List<Product> receipt = CleanItUp.DataCleaning(data);
 
-            foreach (Product p in receipt)
-            {
-                Console.WriteLine(p.PurchaseDate + " " + p.ProductNumber + " " + p.ProductPrice + " " + p.ProductName);
-            }
+            // Confirm with user info is correct, correct it if not 
+            receipt = AssignItems.ConfirmCorrectInformation(receipt);
 
             // TODO: Assign products to users 
+
 
             // After receipt, check for additional actions
             PromptForMoreRecipts(data);

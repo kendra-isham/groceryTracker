@@ -178,7 +178,7 @@ namespace GroceryTracker
             }
             else
             {
-                date = DateTime.Now.ToString("yyyy/mm/dd");
+                date = DateTime.Now.ToString("yyyy/MM/dd");
             }
 
             return date;
