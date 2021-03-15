@@ -6,6 +6,7 @@
 	- additional classes 
 	- create a list 
 	- read data from external file 
+	- LINQ
 
 ### Premise
 	- User designates file path to Costco receipt image

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using Microsoft.Azure.CognitiveServices.Vision.ComputerVision;
 
@@ -17,11 +16,8 @@ namespace GroceryTracker
             List<User> users = new List<User>();
 
             PromptUserForInfo(users);
-
             APICall(data);
-
             List<Product> receipt = CleanItUp.DataCleaning(data);
-
             receipt = CorrectItems.ConfirmCorrectInformation(receipt);
 
             if (users.Count > 1)
@@ -32,7 +28,7 @@ namespace GroceryTracker
                 receipt = AssignItems.AssignResponsibleParty(receipt, users);
                 users = SplitShared(users, receipt);
                 users = CalculateCosts(users, receipt);
-                DisplayTotalCharges(users);
+                users.Remove(shared);
             }
             else
             {
@@ -41,21 +37,19 @@ namespace GroceryTracker
                     p.ResponsibleParty = users[0];
                     users[0].TotalCharges += p.ProductPrice;
                 }
-                DisplayTotalCharges(users);
             }
 
+            DisplayTotalCharges(users);
+            DBConnection.SQLInsert(receipt);
             PromptForMoreRecipts(data);
-            
-            Thread.Sleep(10);
         }
-
         private static void DisplayTotalCharges(List<User> users)
         {
             Console.Clear();
             Console.WriteLine("Total charges: \n");
             foreach (User u in users)
             {
-                Console.WriteLine(u.Name +" $"+ u.TotalCharges);
+                Console.WriteLine(u.Name +" $"+ Math.Round(u.TotalCharges, 2));
             }
         }
         private static void APICall(Product data)
@@ -128,7 +122,7 @@ namespace GroceryTracker
         {
             try
             {
-                Console.Write("Enter how many people are splitting the cost: ");
+                Console.Write("Welcome to the Grocery Tracker!\nEnter how many people are splitting the cost: ");
                 int numOfUsers = Convert.ToInt32(Console.ReadLine());
                 if(numOfUsers < 1)
                 {

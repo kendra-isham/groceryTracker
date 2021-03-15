@@ -18,7 +18,7 @@ namespace GroceryTracker
                 List<string> productNums = IsolateProductNum(products);
                 List<string> productNames = IsolateProductName(products);
 
-                List<Product> receipt = PopulateList(prices, productNums, productNames, date);
+                List<Product> receipt = PopulateList(prices, productNums, productNames, date, data);
                 return receipt;
             }
             catch
@@ -30,7 +30,7 @@ namespace GroceryTracker
         }
 
         // populate list of Products 
-        public static List<Product> PopulateList(List<string> prices, List<string> productNums, List<string> productNames, string purchaseDate)
+        public static List<Product> PopulateList(List<string> prices, List<string> productNums, List<string> productNames, string purchaseDate, Product data)
         {
             List<Product> receipt = new List<Product>();
 
@@ -42,6 +42,7 @@ namespace GroceryTracker
                 product.ProductNumber = productNums.ToArray()[i];
                 product.ProductPrice = Convert.ToDouble(prices.ToArray()[i]);
                 product.PurchaseDate = purchaseDate;
+                product.PreCleanedText = data.PreCleanedText;
                 receipt.Add(product);
             }
 
@@ -174,11 +175,11 @@ namespace GroceryTracker
             string date; 
             if (matchedDate.Success)
             {
-                date = DateTime.Parse(matchedDate.Value).ToString("yyyy/mm/dd");
+                date = DateTime.Parse(matchedDate.Value).ToString("yyyy-mm-dd");
             }
             else
             {
-                date = DateTime.Now.ToString("yyyy/MM/dd");
+                date = DateTime.Now.ToString("yyyy-MM-dd");
             }
 
             return date;

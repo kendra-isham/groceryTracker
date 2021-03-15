@@ -1,12 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlTypes;
 using Microsoft.Data.SqlClient;
-
-// TODO 
-// https://docs.microsoft.com/en-us/azure/azure-sql/database/connect-query-dotnet-visual-studio
-// should rename method 
-// have this be an insert method 
-// create a query method as well to display data to the user 
-// add column to table for user
 
 namespace GroceryTracker
 {
@@ -16,38 +12,54 @@ namespace GroceryTracker
         static string dataSource = Environment.GetEnvironmentVariable("DATASOURCE");
         static string SQLUsername = Environment.GetEnvironmentVariable("AZURE_SQL_USERNAME");
         static string SQLPassword = Environment.GetEnvironmentVariable("AZURE_SQL_PASSWORD");
-        static string groceryDB = "grocery";
-        public static void SQLTestConnection() {
+        static string DB = "grocery";
+        static string table = "dbo.receipts";
+        
+        public static void SQLInsert(List<Product> receipt)
+        {
             try
             {
                 SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder();
-                    builder.DataSource = dataSource;
-                    builder.UserID = SQLUsername;
-                    builder.Password = SQLPassword;
-                    builder.InitialCatalog = groceryDB;
+                builder.DataSource = dataSource;
+                builder.UserID = SQLUsername;
+                builder.Password = SQLPassword;
+                builder.InitialCatalog = DB;
                 using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
                 {
-                    Console.WriteLine("\nQuery data example:");
-                    Console.WriteLine("=========================================\n");
+                    //sql statement here 
+                    string insert = $"INSERT INTO {table}([Purchase Date], [Product Number], [Product Name], [Product Price], [Uncleaned Data], [Username])" +
+                        $"VALUES(@PurchaseDate, @ProductNumber, @ProductName, @ProductPrice, @UncleanedData, @Username)";
 
-                    String sql = "SELECT [Product Name] FROM [dbo].[receipts]";
-
-                    using (SqlCommand command = new SqlCommand(sql, connection))
+                    using (SqlCommand command = new SqlCommand(insert, connection))
                     {
+
+                        command.Parameters.Add("@PurchaseDate", SqlDbType.Date);
+                        command.Parameters.Add("@ProductNumber", SqlDbType.Int);
+                        command.Parameters.Add("@ProductName", SqlDbType.Text);
+                        command.Parameters.Add("@ProductPrice", SqlDbType.Money);
+                        command.Parameters.Add("@UncleanedData", SqlDbType.Text);
+                        command.Parameters.Add("@Username", SqlDbType.Text);
+
                         connection.Open();
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                Console.WriteLine("{0}", reader.GetString(0));
-                            }
+                        for(int i = 0; i < receipt.Count; i++) { 
+                            command.Parameters["@PurchaseDate"].Value = DateTime.Parse(receipt[i].PurchaseDate);
+                            command.Parameters["@ProductNumber"].Value = receipt[i].ProductNumber;
+                            command.Parameters["@ProductName"].Value = receipt[i].ProductName;
+                            command.Parameters["@ProductPrice"].Value = receipt[i].ProductPrice;
+                            command.Parameters["@UncleanedData"].Value = receipt[i].PreCleanedText;
+                            command.Parameters["@Username"].Value = receipt[i].ResponsibleParty.Name;
+
+                            command.ExecuteNonQuery();
                         }
+                        Console.WriteLine("Inserted Receipt Data to database\n\n");
+                        connection.Close();
                     }
                 }
             }
-            catch (SqlException e)
+            catch
             {
-                Console.WriteLine(e.ToString());
+                Console.WriteLine("There was an error logging receipt data to the database.");
+                Driver.Main();
             }
         }
     }
