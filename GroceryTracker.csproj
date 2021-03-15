@@ -96,6 +96,7 @@
   <ItemGroup>
     <Compile Include="AssignItems.cs" />
     <Compile Include="CleanItUp.cs" />
+    <Compile Include="CorrectItems.cs" />
     <Compile Include="DBConnection.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="OCRCall.cs" />

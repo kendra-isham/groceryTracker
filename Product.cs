@@ -9,7 +9,7 @@ namespace GroceryTracker
         public string ProductNumber { get; set; }
         public string ProductName { get; set; }
         public double ProductPrice { get; set; }
-        public List<Product> Receipt { get; set; }
+        public User ResponsibleParty { get; set; }
     }
 
 }

@@ -6,7 +6,6 @@
 	- additional classes 
 	- create a list 
 	- read data from external file 
-	- visualize data (if time, visualize trends in purchased items)
 
 ### Premise
 	- User designates file path to Costco receipt image
@@ -15,7 +14,7 @@
 	- Ability to view each user's purchase history 
 
 ### Setup to run locally 
-	- Set up Window's environment variables 
+	- Set up Window's environment variables
 		- Open a Window's Run prompt (win key + R)
 		- Enter 'sysdm.cpl'
 		- Advanced Tab 
@@ -27,10 +26,6 @@
 ### TODO
   - SQL connection
 	- Connect to azure SQL 
-	- Potentially refactor code to better suit SQL 
-	- https://docs.microsoft.com/en-us/azure/azure-sql/database/connect-query-dotnet-visual-studio
-  - Assign items
-  - GUI 
-	- Utilize windows file explorer 
+  - Add "still processing message" if api takes over 10 seconds to respond
   - Regex to clean Kroger and Meijer receipts 
   
