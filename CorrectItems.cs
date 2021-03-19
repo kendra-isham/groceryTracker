@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GroceryTracker
 {
@@ -38,16 +36,22 @@ namespace GroceryTracker
 
             while (incorrectCategory != 6)
             {
-                //prompt for incorrect info 
-                Console.WriteLine("\nPlease select the incorrect info category: \n" +
-                    "\t1. Purchase Date\n" +
-                    "\t2. Product Number\n" +
-                    "\t3. Product Name\n" +
-                    "\t4. Product Price\n" +
-                    "\t5. Display Updated List\n" +
-                    "\t6. All information is correct\n");
-                incorrectCategory = Convert.ToInt32(Console.ReadLine());
-
+                try
+                {
+                    Console.WriteLine("\nPlease select the incorrect info category: \n" +
+                        "\t1. Purchase Date\n" +
+                        "\t2. Product Number\n" +
+                        "\t3. Product Name\n" +
+                        "\t4. Product Price\n" +
+                        "\t5. Display Updated List\n" +
+                        "\t6. All information is correct\n");
+                    incorrectCategory = Convert.ToInt32(Console.ReadLine());
+                }
+                catch
+                {
+                    Console.WriteLine("You made a mistake. Now you have to start all over because I haven't put in proper error handling.");
+                    Driver.Main();
+                }
                 switch (incorrectCategory)
                 {
                     case 1:
@@ -56,13 +60,22 @@ namespace GroceryTracker
 
                         Console.WriteLine("What should it be? ");
                         string correctInfo = Console.ReadLine();
-
-                        var found = receipt.Where(item => item.PurchaseDate == incorrectInfo);
-                        foreach (var f in found)
+                        DateTime date;
+                        
+                        if (DateTime.TryParse(correctInfo, out date))
                         {
-                            f.PurchaseDate = correctInfo;
+                            var foundDate = receipt.Where(item => item.PurchaseDate == incorrectInfo);
+                            foreach (var f in foundDate)
+                            {
+                                f.PurchaseDate = String.Format("{0:yyyy-MM-dd}", date);
+                            }
+                            break;
                         }
-                        break;
+                        else
+                        {
+                            Console.WriteLine("\nError! Please format date yyyy-MM-dd!");
+                            break;
+                        }
 
                     case 2:
                         Console.WriteLine("Please enter the incorrect product number: ");
@@ -71,7 +84,7 @@ namespace GroceryTracker
                         Console.WriteLine("What should it be? ");
                         correctInfo = Console.ReadLine();
 
-                        found = receipt.Where(item => item.ProductNumber == incorrectInfo);
+                        var found = receipt.Where(item => item.ProductNumber == incorrectInfo);
                         foreach (var f in found)
                         {
                             f.ProductNumber = correctInfo;

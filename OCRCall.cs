@@ -28,7 +28,6 @@ namespace GroceryTracker
 
         public static async Task ReadFileLocal(ComputerVisionClient client, string localFile, Product data)
         {
-            // Read text from URL
             try
             {
                 var textHeaders = await client.ReadInStreamAsync(File.OpenRead(localFile), language: "en");
@@ -42,8 +41,9 @@ namespace GroceryTracker
 
                 // Extract the text
                 ReadOperationResult results;
-                Console.WriteLine($"Reading text from local file {Path.GetFileName(localFile)}...");
-                Console.WriteLine();
+                Console.WriteLine($"Reading text from local file {Path.GetFileName(localFile)}...\n" +
+                    $"This can take some time.");
+                
                 do
                 {
                     results = await client.GetReadResultAsync(Guid.Parse(operationId));

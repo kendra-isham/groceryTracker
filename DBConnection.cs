@@ -15,6 +15,7 @@ namespace GroceryTracker
         static string DB = "grocery";
         static string table = "dbo.receipts";
         
+        // TODO: export db as csv
         public static void SQLInsert(List<Product> receipt)
         {
             try
